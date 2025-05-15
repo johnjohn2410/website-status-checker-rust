@@ -1,0 +1,52 @@
+# --- Test File for Website Status Checker ---
+
+# Successful Sites (should return 200 OK)
+https://www.rust-lang.org
+https://www.google.com
+https://www.github.com
+https://developer.mozilla.org
+https://crates.io
+
+# Blank line below (should be ignored)
+
+# Site that might redirect (reqwest handles redirects by default)
+http://google.com
+
+# Sites that should fail (non-existent domains or common error codes)
+https://this-is-a-nonexistent-domain-qwerty12345.org
+https://example.com/nonexistentpage123
+http://localhost:12345 # Unlikely to be running, should cause connection refused or timeout
+
+# A site that might be slow or timeout (depending on your --timeout setting)
+# You might need to find a genuinely slow public endpoint or use a tool to simulate one
+# For testing, a common public "delay" endpoint can be used if available.
+# Example (if such a service exists and is reliable for testing):
+# http://httpbin.org/delay/7  (This would delay for 7 seconds, good for testing timeout)
+# Since httpbin can be unreliable or rate-limit, let's use another non-existent high port:
+http://google.com:81 # This port is usually closed, likely to timeout or connection refused
+
+# Commented out line
+# https://www.another-site.com
+
+# A very long URL to test truncation in live output and full URL in JSON
+https://this.is.a.very.very.very.long.url.that.should.definitely.exceed.the.truncation.limit.set.in.the.program.example.com/some/path/to/a/resource?query=param&another=value
+
+# Another successful site
+https://www.wikipedia.org
+
+# Another one likely to fail (connection error)
+https://nonexistent.invalidtld
+
+# Test case with a different protocol (if your client supports it, reqwest does)
+# ftp://ftp.gnu.org/ # reqwest does not support FTP out of the box, will error
+# Sticking to HTTP/HTTPS for this project based on typical usage of reqwest
+http://neverssl.com # Good for testing plain HTTP
+
+# Edge case: URL with special characters (reqwest should handle encoding)
+# However, for the file input itself, they are just strings.
+# https://example.com/search?q=hello world&name=test#fragment
+# The #fragment part is typically client-side only and not sent to the server.
+https://example.com/search?q=hello%20world&name=test%20user
+
+# Another valid site
+https://www.eff.org
