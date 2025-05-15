@@ -1,5 +1,6 @@
 /target
 *.iml
 .idea/
-/status.json
+status.json
+status_round_*.json
 

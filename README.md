@@ -39,6 +39,8 @@ A command-line utility written in Rust to concurrently check the availability an
 *   `--workers <N>`: Number of worker threads (default: number of logical CPU cores, minimum 1).
 *   `--timeout <seconds>`: Per-request timeout in seconds (default: 5, minimum 1).
 *   `--retries <N>`: Number of additional attempts after a failure (default: 0). A 100ms pause occurs between attempts.
+*   `--period <seconds>`: Loop forever, checking URLs every `<seconds>` interval. JSON output per round.
+*   `--assert-header "Name: Value"`: Check for a specific HTTP header and its exact value.
 *   `-h, --help`: Show the help message and exit.
 
 If neither `--file` nor positional URLs are supplied, a help message is shown, and the program exits with code 2.
@@ -70,6 +72,35 @@ If neither `--file` nor positional URLs are supplied, a help message is shown, a
 ## Concurrency Model
 
 The program utilizes a fixed pool of `N` worker threads, configurable via the `--workers N` option (defaulting to the number of logical CPU cores). These worker threads pull URLs from a shared job queue. Each worker makes a blocking HTTP request for its assigned URL. This model allows the program to efficiently process a large list of URLs by parallelizing the network-bound work across the available workers, improving overall throughput compared to sequential checking.
+
+## Bonus Features Implemented
+
+This project includes the following optional bonus features:
+
+1.  **Periodic Monitoring (`--period <seconds>`)**
+    *   The `--period <seconds>` flag enables continuous monitoring. The program will execute a full round of checks for all specified URLs, print the results and summary statistics, then wait for the given number of seconds before starting the next round.
+    *   When using `--period`, the JSON output files will be named `status_round_N.json` for each round `N` (e.g., `status_round_1.json`, `status_round_2.json`).
+    *   Use `Ctrl+C` to stop the periodic checks.
+    *   **Example:** `./target/release/website-status-checker-rust --file sites.txt --period 60` (checks every minute).
+
+2.  **Summary Statistics**
+    *   At the end of each round of checks (or at the end of a single run if not using `--period`), summary statistics are printed to `stdout`.
+    *   These statistics include:
+        *   Total URLs Attempted
+        *   Number of Successful Checks
+        *   Number of Failed Checks
+        *   Minimum Response Time (for successful checks)
+        *   Maximum Response Time (for successful checks)
+        *   Average Response Time (for successful checks)
+
+3.  **HTTP Header Assertions (`--assert-header "Header-Name: Expected Value"`)**
+    *   The `--assert-header` flag allows you to specify a single HTTP header name and an expected value.
+    *   For each URL, after a successful HTTP response (e.g., 200 OK), the program will check if the specified header exists and if its value exactly matches the expected value.
+    *   Header name matching is performed case-insensitively.
+    *   Header value matching is case-sensitive.
+    *   If the assertion fails (header missing, or value mismatch), the `action_status` for that URL will be an `Err` detailing the assertion failure, even if the HTTP status code was otherwise successful.
+    *   **Example:** `./target/release/website-status-checker-rust https://example.com --assert-header "Content-Type: text/html; charset=UTF-8"`
+    *   **Example (failed assertion):** `./target/release/website-status-checker-rust https://example.com --assert-header "X-Made-Up-Header: nope"`
 
 ## JSON Output (`status.json`)
 
